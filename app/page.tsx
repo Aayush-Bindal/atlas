@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
 /* eslint-disable @next/next/no-img-element */
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   ArrowRight,
   Mic,
@@ -44,10 +44,10 @@ interface Step {
 
 interface Particle {
   id: number;
-  top: string;      // already formatted without %
-  left: string;     // already formatted without %
-  size: string;     // px value as string
-  opacity: string;  // 0.xxxxxx as string
+  top: string; // already formatted without %
+  left: string; // already formatted without %
+  size: string; // px value as string
+  opacity: string; // 0.xxxxxx as string
   boxShadow: string;
 }
 
@@ -62,8 +62,8 @@ interface AnimatedSectionProps {
 const FLOATING_IMAGES: FloatingImage[] = [
   {
     id: 1,
-    src: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=500&q=80',
-    alt: 'Wedding',
+    src: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=500&q=80",
+    alt: "Wedding",
     x: 15,
     y: 15,
     z: 1,
@@ -72,8 +72,8 @@ const FLOATING_IMAGES: FloatingImage[] = [
   },
   {
     id: 2,
-    src: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=500&q=80',
-    alt: 'Friends',
+    src: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=500&q=80",
+    alt: "Friends",
     x: 75,
     y: 20,
     z: 0,
@@ -82,8 +82,8 @@ const FLOATING_IMAGES: FloatingImage[] = [
   },
   {
     id: 3,
-    src: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=500&q=80',
-    alt: 'Concert',
+    src: "https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=500&q=80",
+    alt: "Concert",
     x: 25,
     y: 65,
     z: 2,
@@ -92,8 +92,8 @@ const FLOATING_IMAGES: FloatingImage[] = [
   },
   {
     id: 4,
-    src: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&q=80',
-    alt: 'Party',
+    src: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&q=80",
+    alt: "Party",
     x: 65,
     y: 75,
     z: 1,
@@ -102,8 +102,8 @@ const FLOATING_IMAGES: FloatingImage[] = [
   },
   {
     id: 5,
-    src: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=500&q=80',
-    alt: 'Event',
+    src: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=500&q=80",
+    alt: "Event",
     x: 48,
     y: 35,
     z: 0,
@@ -112,8 +112,8 @@ const FLOATING_IMAGES: FloatingImage[] = [
   },
   {
     id: 6,
-    src: 'https://images.unsplash.com/photo-1530103862676-de3c9a59af38?w=500&q=80',
-    alt: 'Trip',
+    src: "https://images.unsplash.com/photo-1530103862676-de3c9a59af38?w=500&q=80",
+    alt: "Trip",
     x: 8,
     y: 85,
     z: 3,
@@ -122,8 +122,8 @@ const FLOATING_IMAGES: FloatingImage[] = [
   },
   {
     id: 7,
-    src: 'https://images.unsplash.com/photo-1516450360452-631d408d526b?w=500&q=80',
-    alt: 'Beach',
+    src: "https://images.unsplash.com/photo-1516450360452-631d408d526b?w=500&q=80",
+    alt: "Beach",
     x: 88,
     y: 45,
     z: 2,
@@ -132,8 +132,8 @@ const FLOATING_IMAGES: FloatingImage[] = [
   },
   {
     id: 8,
-    src: 'https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=500&q=80',
-    alt: 'Friends 2',
+    src: "https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=500&q=80",
+    alt: "Friends 2",
     x: 35,
     y: 10,
     z: 0,
@@ -142,8 +142,8 @@ const FLOATING_IMAGES: FloatingImage[] = [
   },
   {
     id: 9,
-    src: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=500&q=80',
-    alt: 'Party 2',
+    src: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=500&q=80",
+    alt: "Party 2",
     x: 82,
     y: 85,
     z: 1,
@@ -194,17 +194,17 @@ const useSmoothParallax = () => {
       }
 
       animationFrameId = requestAnimationFrame(() => {
-        const x = ((e.clientX / window.innerWidth) - 0.5) * 2;
-        const y = ((e.clientY / window.innerHeight) - 0.5) * 2;
-        container.style.setProperty('--mouse-x', x.toString());
-        container.style.setProperty('--mouse-y', y.toString());
+        const x = (e.clientX / window.innerWidth - 0.5) * 2;
+        const y = (e.clientY / window.innerHeight - 0.5) * 2;
+        container.style.setProperty("--mouse-x", x.toString());
+        container.style.setProperty("--mouse-y", y.toString());
       });
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener("mousemove", handleMouseMove);
       if (animationFrameId !== null) {
         cancelAnimationFrame(animationFrameId);
       }
@@ -219,10 +219,10 @@ const useScrollY = () => {
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
@@ -233,7 +233,7 @@ const useScrollY = () => {
 
 const AnimatedSection: React.FC<AnimatedSectionProps> = ({
   children,
-  className = '',
+  className = "",
   delay = 0,
 }) => {
   const [ref, isVisible] = useOnScreen({ threshold: 0.1 });
@@ -243,7 +243,7 @@ const AnimatedSection: React.FC<AnimatedSectionProps> = ({
       ref={ref}
       style={{ transitionDelay: `${delay}ms` }}
       className={`transition-all duration-1000 transform ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'
+        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-20"
       } ${className}`}
     >
       {children}
@@ -284,7 +284,7 @@ const ImmersiveBackground: React.FC = () => {
           boxShadow,
         };
       }),
-    []
+    [],
   );
 
   return (
@@ -436,8 +436,8 @@ const Hero: React.FC = () => {
                   key={word}
                   className={`absolute transition-all duration-700 transform ${
                     i === activeWordIndex
-                      ? 'translate-y-0 opacity-100 blur-0'
-                      : 'translate-y-full opacity-0 blur-sm'
+                      ? "translate-y-0 opacity-100 blur-0"
+                      : "translate-y-full opacity-0 blur-sm"
                   }`}
                 >
                   {word}
@@ -467,7 +467,7 @@ const AlchemySection: React.FC = () => {
         const r = pseudoRandom(1000 + i);
         return (r * 100).toFixed(2); // string %, stable
       }),
-    []
+    [],
   );
 
   return (
@@ -481,8 +481,8 @@ const AlchemySection: React.FC = () => {
                 Context Engine v1.0
               </div>
               <h2 className="text-5xl md:text-7xl font-bold text-white leading-none tracking-tighter mb-8">
-                The{' '}
-                <span className="font-serif italic text-zinc-500">Alchemy</span>{' '}
+                The{" "}
+                <span className="font-serif italic text-zinc-500">Alchemy</span>{" "}
                 of Memory.
               </h2>
               <p className="text-xl text-zinc-400 leading-relaxed max-w-md">
@@ -615,7 +615,7 @@ const ScrapbookSection: React.FC = () => {
           {/* Center polaroid */}
           <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 animate-float"
-            style={{ animationDelay: '0s' }}
+            style={{ animationDelay: "0s" }}
           >
             <div className="group relative transform -rotate-3 hover:rotate-0 transition-transform duration-500 cursor-pointer hover:z-50">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-32 h-6 bg-white/10 backdrop-blur rotate-1 z-10" />
@@ -635,7 +635,7 @@ const ScrapbookSection: React.FC = () => {
           {/* Atlas Insight card */}
           <div
             className="absolute top-[20%] right-[20%] md:right-[30%] z-20 animate-float"
-            style={{ animationDelay: '1s' }}
+            style={{ animationDelay: "1s" }}
           >
             <div className="bg-[#111] border border-zinc-800 p-6 rounded-xl shadow-2xl max-w-[250px] transform rotate-6 hover:scale-105 transition-transform">
               <div className="flex items-center gap-2 mb-3 border-b border-zinc-800 pb-2">
@@ -654,7 +654,7 @@ const ScrapbookSection: React.FC = () => {
           {/* Bottom-left photo */}
           <div
             className="absolute bottom-[10%] left-[5%] md:left-[15%] z-10 animate-float"
-            style={{ animationDelay: '2s' }}
+            style={{ animationDelay: "2s" }}
           >
             <div className="group bg-white p-2 shadow-xl transform -rotate-12 hover:-rotate-6 transition-transform max-w-[180px] cursor-pointer">
               <img
@@ -671,7 +671,7 @@ const ScrapbookSection: React.FC = () => {
           {/* Peak Volume pill */}
           <div
             className="absolute bottom-[25%] right-[15%] z-10 animate-float"
-            style={{ animationDelay: '1.5s' }}
+            style={{ animationDelay: "1.5s" }}
           >
             <div className="bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-full transform -rotate-6 hover:rotate-0 transition-transform">
               <p className="text-xs font-mono text-zinc-400">
@@ -683,7 +683,7 @@ const ScrapbookSection: React.FC = () => {
           {/* Map card */}
           <div
             className="absolute top-[5%] left-[10%] z-10 animate-float"
-            style={{ animationDelay: '2.5s' }}
+            style={{ animationDelay: "2.5s" }}
           >
             <div className="group bg-zinc-900 border border-zinc-800 p-1 rounded-lg transform rotate-3 hover:rotate-0 transition-transform max-w-40 cursor-pointer">
               <div className="relative overflow-hidden rounded">
@@ -709,7 +709,7 @@ const ScrapbookSection: React.FC = () => {
           {/* Sticky note */}
           <div
             className="absolute bottom-[5%] right-[5%] z-20 animate-float"
-            style={{ animationDelay: '3s' }}
+            style={{ animationDelay: "3s" }}
           >
             <div className="bg-[#fefce8] p-4 w-40 shadow-lg transform rotate-2 hover:-rotate-2 transition-transform relative">
               <div className="w-8 h-8 rounded-full bg-black/5 absolute -top-3 left-1/2 -translate-x-1/2" />
@@ -723,7 +723,7 @@ const ScrapbookSection: React.FC = () => {
           {/* Camera polaroid */}
           <div
             className="absolute top-[10%] right-[5%] z-10 animate-float"
-            style={{ animationDelay: '1.8s' }}
+            style={{ animationDelay: "1.8s" }}
           >
             <div className="group bg-white p-1.5 shadow-lg transform rotate-12 hover:rotate-6 transition-transform max-w-[140px]">
               <img
@@ -744,25 +744,25 @@ const ProtocolSection: React.FC = () => {
 
   const steps: Step[] = [
     {
-      id: '01',
-      title: 'Initiate',
-      desc: 'Host generates a time-locked frequency. One link drops into the group chat. No apps.',
+      id: "01",
+      title: "Initiate",
+      desc: "Host generates a time-locked frequency. One link drops into the group chat. No apps.",
       image:
-        'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=500&q=80',
+        "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=500&q=80",
     },
     {
-      id: '02',
-      title: 'Share',
-      desc: 'Guests upload visuals and record audio context. We capture the vibe, not just the pixels.',
+      id: "02",
+      title: "Share",
+      desc: "Guests upload visuals and record audio context. We capture the vibe, not just the pixels.",
       image:
-        'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=500&q=80',
+        "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=500&q=80",
     },
     {
-      id: '03',
-      title: 'Remember',
-      desc: 'Atlas compiles the fragments. By morning, a cohesive digital artifact is ready.',
+      id: "03",
+      title: "Remember",
+      desc: "Atlas compiles the fragments. By morning, a cohesive digital artifact is ready.",
       image:
-        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=500&q=80',
+        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=500&q=80",
     },
   ];
 
@@ -786,14 +786,14 @@ const ProtocolSection: React.FC = () => {
                 <div className="flex items-baseline gap-8">
                   <span
                     className={`text-xs font-mono transition-colors ${
-                      activeStep === index ? 'text-white' : 'text-zinc-600'
+                      activeStep === index ? "text-white" : "text-zinc-600"
                     }`}
                   >
                     ({step.id})
                   </span>
                   <h3
                     className={`text-5xl md:text-8xl font-bold transition-colors tracking-tighter ${
-                      activeStep === index ? 'text-white' : 'text-zinc-800'
+                      activeStep === index ? "text-white" : "text-zinc-800"
                     }`}
                   >
                     {step.title}
@@ -804,8 +804,8 @@ const ProtocolSection: React.FC = () => {
                 <div
                   className={`overflow-hidden transition-all duration-500 ease-in-out ${
                     activeStep === index
-                      ? 'max-h-24 opacity-100'
-                      : 'max-h-0 opacity-0'
+                      ? "max-h-24 opacity-100"
+                      : "max-h-0 opacity-0"
                   }`}
                 >
                   <p className="text-zinc-400 max-w-xs text-sm leading-relaxed pt-2 md:pt-0">
@@ -865,7 +865,7 @@ const IntelligenceSection: React.FC = () => {
             {/* Floating Tag 1 */}
             <div
               className="absolute top-[20%] -left-5 md:-left-10 flex items-center gap-2 animate-float"
-              style={{ animationDelay: '0s' }}
+              style={{ animationDelay: "0s" }}
             >
               <div className="bg-black/60 backdrop-blur-md border border-white/10 px-4 py-2 rounded-full text-xs text-zinc-300 shadow-xl flex items-center gap-2">
                 <Scan size={12} className="text-zinc-500" /> Movement
@@ -876,7 +876,7 @@ const IntelligenceSection: React.FC = () => {
             {/* Floating Tag 2 */}
             <div
               className="absolute bottom-[30%] -right-2.5 md:right-[-30px] flex items-center gap-2 flex-row-reverse animate-float"
-              style={{ animationDelay: '1.5s' }}
+              style={{ animationDelay: "1.5s" }}
             >
               <div className="bg-black/60 backdrop-blur-md border border-white/10 px-4 py-2 rounded-full text-xs text-zinc-300 shadow-xl flex items-center gap-2">
                 <Sparkles size={12} className="text-zinc-500" /> Sentiment: Joy
@@ -887,7 +887,7 @@ const IntelligenceSection: React.FC = () => {
             {/* Floating Tag 3 (Palette) */}
             <div
               className="absolute bottom-8 left-4 flex items-center gap-2 animate-float"
-              style={{ animationDelay: '2.5s' }}
+              style={{ animationDelay: "2.5s" }}
             >
               <div className="bg-black/60 backdrop-blur-md border border-white/10 p-2 rounded-full text-xs text-zinc-300 shadow-xl flex items-center gap-2">
                 <div className="flex gap-1">
