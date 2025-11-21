@@ -12,6 +12,7 @@ import {
   Layers,
   MapPin,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 // --- Helpers (no Math.random in render) ---
 
@@ -365,6 +366,7 @@ const Hero: React.FC = () => {
   const containerRef = useSmoothParallax();
   const [activeWordIndex, setActiveWordIndex] = useState(0);
   const words = ['The Wedding', 'The Road Trip', 'The Reunion', 'That Night'];
+  const router = useRouter();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -446,9 +448,9 @@ const Hero: React.FC = () => {
         </AnimatedSection>
 
         <AnimatedSection delay={400}>
-          <button className="px-8 py-4 bg-white text-black rounded-full font-bold text-lg hover:bg-zinc-200 transition-all hover:scale-105 flex items-center gap-2 mx-auto">
-            Create a Room <ArrowRight size={18} />
-          </button>
+              <button className="px-8 py-4 bg-white text-black rounded-full font-bold text-lg hover:bg-zinc-200 transition-all hover:scale-105 flex items-center gap-2 mx-auto" onClick={() => router.push('/create')}>
+                Create a Room <ArrowRight size={18} />
+              </button>
         </AnimatedSection>
       </div>
     </section>
