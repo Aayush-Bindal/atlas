@@ -1,0 +1,423 @@
+{
+  "info": {
+    "name": "ATLAS API",
+    "description": "Complete API collection for ATLAS - AI-powered photo narrative generator. Replace {{base64_image_X}} placeholders with actual base64 encoded images.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "atlas-api"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/health",
+          "host": ["{{base_url}}"],
+          "path": ["api", "health"]
+        },
+        "description": "Check API health and OpenRouter latency. No authentication required."
+      },
+      "response": [
+        {
+          "name": "Health Check Success",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "health"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"status\": \"ok\",\n  \"timestamp\": \"2024-01-15T10:30:00.000Z\",\n  \"version\": \"1.0.0\",\n  \"openRouterLatencyMs\": 234\n}"
+        }
+      ]
+    },
+    {
+      "name": "Generate Caption - Single Image",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"image\": {\n    \"orderIndex\": 1,\n    \"base64\": \"{{base64_image_1}}\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/caption",
+          "host": ["{{base_url}}"],
+          "path": ["api", "caption"]
+        },
+        "description": "Generate AI caption for a single image. Replace {{base64_image_1}} with actual base64 data URL (e.g., data:image/jpeg;base64,/9j/4AAQ...)"
+      },
+      "response": [
+        {
+          "name": "Caption Success",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"image\": {\n    \"orderIndex\": 1,\n    \"base64\": \"data:image/jpeg;base64,/9j/4AAQ...\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/caption",
+              "host": ["{{base_url}}"],
+              "path": ["api", "caption"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"orderIndex\": 1,\n  \"caption\": \"A person standing in front of a landmark building during sunset\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Generate Caption - With Metadata",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"image\": {\n    \"orderIndex\": 1,\n    \"base64\": \"{{base64_image_1}}\",\n    \"metadata\": {\n      \"takenAt\": \"2024-01-15T10:30:00.000Z\",\n      \"latitude\": 40.7128,\n      \"longitude\": -74.0060,\n      \"device\": \"iPhone 15 Pro\"\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/caption",
+          "host": ["{{base_url}}"],
+          "path": ["api", "caption"]
+        },
+        "description": "Generate caption with EXIF metadata. Metadata enhances caption context but is optional."
+      },
+      "response": []
+    },
+    {
+      "name": "Generate Story - Minimal (3 images)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"images\": [\n    {\n      \"orderIndex\": 1,\n      \"base64\": \"{{base64_image_1}}\"\n    },\n    {\n      \"orderIndex\": 2,\n      \"base64\": \"{{base64_image_2}}\"\n    },\n    {\n      \"orderIndex\": 3,\n      \"base64\": \"{{base64_image_3}}\"\n    }\n  ],\n  \"contexts\": [\n    {\n      \"orderIndex\": 1,\n      \"text\": \"Alice standing at the airport holding her boarding pass\"\n    },\n    {\n      \"orderIndex\": 2,\n      \"text\": \"View from airplane window over clouds at sunset\"\n    },\n    {\n      \"orderIndex\": 3,\n      \"text\": \"Alice and friends at the hotel rooftop with city skyline\"\n    }\n  ],\n  \"globalAnswers\": {\n    \"purpose\": \"Birthday weekend trip to Tokyo\",\n    \"mood\": \"whimsical and adventurous\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/atlas",
+          "host": ["{{base_url}}"],
+          "path": ["api", "atlas"]
+        },
+        "description": "Generate complete story from 3 images with validated captions. Minimum viable story request."
+      },
+      "response": [
+        {
+          "name": "Story Success",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"images\": [...],\n  \"contexts\": [...],\n  \"globalAnswers\": {...}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/atlas",
+              "host": ["{{base_url}}"],
+              "path": ["api", "atlas"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"pages\": [\n    {\n      \"orderIndex\": 1,\n      \"narrativeText\": \"The weekend began as soon as Alice clutched her boarding pass at the terminal...\"\n    },\n    {\n      \"orderIndex\": 2,\n      \"narrativeText\": \"As the plane ascended through layers of cotton-candy clouds...\"\n    },\n    {\n      \"orderIndex\": 3,\n      \"narrativeText\": \"By evening, the rooftop of their hotel became their stage...\"\n    }\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "Generate Story - Full Example (5 images with metadata)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"images\": [\n    {\n      \"orderIndex\": 1,\n      \"base64\": \"{{base64_image_1}}\",\n      \"metadata\": {\n        \"takenAt\": \"2024-01-15T08:30:00.000Z\",\n        \"latitude\": 40.6413,\n        \"longitude\": -73.7781,\n        \"device\": \"iPhone 15 Pro\"\n      }\n    },\n    {\n      \"orderIndex\": 2,\n      \"base64\": \"{{base64_image_2}}\",\n      \"metadata\": {\n        \"takenAt\": \"2024-01-15T14:20:00.000Z\",\n        \"latitude\": 35.6762,\n        \"longitude\": 139.6503,\n        \"device\": \"iPhone 15 Pro\"\n      }\n    },\n    {\n      \"orderIndex\": 3,\n      \"base64\": \"{{base64_image_3}}\",\n      \"metadata\": {\n        \"takenAt\": \"2024-01-15T19:45:00.000Z\",\n        \"latitude\": 35.6586,\n        \"longitude\": 139.7454,\n        \"device\": \"iPhone 15 Pro\"\n      }\n    },\n    {\n      \"orderIndex\": 4,\n      \"base64\": \"{{base64_image_4}}\",\n      \"metadata\": {\n        \"takenAt\": \"2024-01-16T10:15:00.000Z\",\n        \"latitude\": 35.7148,\n        \"longitude\": 139.7967,\n        \"device\": \"iPhone 15 Pro\"\n      }\n    },\n    {\n      \"orderIndex\": 5,\n      \"base64\": \"{{base64_image_5}}\",\n      \"metadata\": {\n        \"takenAt\": \"2024-01-16T18:30:00.000Z\",\n        \"latitude\": 35.6586,\n        \"longitude\": 139.7454,\n        \"device\": \"iPhone 15 Pro\"\n      }\n    }\n  ],\n  \"contexts\": [\n    {\n      \"orderIndex\": 1,\n      \"text\": \"Emma and Sarah at JFK airport, holding golden tickets with excited expressions\"\n    },\n    {\n      \"orderIndex\": 2,\n      \"text\": \"Tokyo skyline from Narita Express train window, Mount Fuji visible in distance\"\n    },\n    {\n      \"orderIndex\": 3,\n      \"text\": \"Group photo at Tokyo Tower illuminated at night, wearing birthday hats\"\n    },\n    {\n      \"orderIndex\": 4,\n      \"text\": \"Traditional Japanese breakfast spread at ryokan with tatami mats\"\n    },\n    {\n      \"orderIndex\": 5,\n      \"text\": \"Sunset from rooftop bar, champagne glasses raised in toast\"\n    }\n  ],\n  \"globalAnswers\": {\n    \"purpose\": \"Emma's 30th birthday weekend in Tokyo\",\n    \"mood\": \"whimsical and celebratory\",\n    \"participants\": \"Emma, Sarah, and Lisa\",\n    \"theme\": \"adventure and friendship\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/atlas",
+          "host": ["{{base_url}}"],
+          "path": ["api", "atlas"]
+        },
+        "description": "Full-featured story request with 5 images, EXIF metadata, detailed contexts, and rich global context. Demonstrates maximum viable complexity."
+      },
+      "response": []
+    },
+    {
+      "name": "Generate Story - Maximum (15 images)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"images\": [\n    {\"orderIndex\": 1, \"base64\": \"{{base64_image_1}}\"},\n    {\"orderIndex\": 2, \"base64\": \"{{base64_image_2}}\"},\n    {\"orderIndex\": 3, \"base64\": \"{{base64_image_3}}\"},\n    {\"orderIndex\": 4, \"base64\": \"{{base64_image_4}}\"},\n    {\"orderIndex\": 5, \"base64\": \"{{base64_image_5}}\"},\n    {\"orderIndex\": 6, \"base64\": \"{{base64_image_6}}\"},\n    {\"orderIndex\": 7, \"base64\": \"{{base64_image_7}}\"},\n    {\"orderIndex\": 8, \"base64\": \"{{base64_image_8}}\"},\n    {\"orderIndex\": 9, \"base64\": \"{{base64_image_9}}\"},\n    {\"orderIndex\": 10, \"base64\": \"{{base64_image_10}}\"},\n    {\"orderIndex\": 11, \"base64\": \"{{base64_image_11}}\"},\n    {\"orderIndex\": 12, \"base64\": \"{{base64_image_12}}\"},\n    {\"orderIndex\": 13, \"base64\": \"{{base64_image_13}}\"},\n    {\"orderIndex\": 14, \"base64\": \"{{base64_image_14}}\"},\n    {\"orderIndex\": 15, \"base64\": \"{{base64_image_15}}\"}\n  ],\n  \"contexts\": [\n    {\"orderIndex\": 1, \"text\": \"Caption for image 1\"},\n    {\"orderIndex\": 2, \"text\": \"Caption for image 2\"},\n    {\"orderIndex\": 3, \"text\": \"Caption for image 3\"},\n    {\"orderIndex\": 4, \"text\": \"Caption for image 4\"},\n    {\"orderIndex\": 5, \"text\": \"Caption for image 5\"},\n    {\"orderIndex\": 6, \"text\": \"Caption for image 6\"},\n    {\"orderIndex\": 7, \"text\": \"Caption for image 7\"},\n    {\"orderIndex\": 8, \"text\": \"Caption for image 8\"},\n    {\"orderIndex\": 9, \"text\": \"Caption for image 9\"},\n    {\"orderIndex\": 10, \"text\": \"Caption for image 10\"},\n    {\"orderIndex\": 11, \"text\": \"Caption for image 11\"},\n    {\"orderIndex\": 12, \"text\": \"Caption for image 12\"},\n    {\"orderIndex\": 13, \"text\": \"Caption for image 13\"},\n    {\"orderIndex\": 14, \"text\": \"Caption for image 14\"},\n    {\"orderIndex\": 15, \"text\": \"Caption for image 15\"}\n  ],\n  \"globalAnswers\": {\n    \"purpose\": \"Week-long adventure trip\",\n    \"mood\": \"epic and transformative\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/atlas",
+          "host": ["{{base_url}}"],
+          "path": ["api", "atlas"]
+        },
+        "description": "Maximum supported story request with 15 images. Tests upper limit constraints and 60s timeout handling."
+      },
+      "response": []
+    },
+    {
+      "name": "Error - Invalid Caption Request",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"image\": {\n    \"orderIndex\": 0,\n    \"base64\": \"not-a-valid-base64\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/caption",
+          "host": ["{{base_url}}"],
+          "path": ["api", "caption"]
+        },
+        "description": "Test validation error handling with invalid orderIndex (must be positive)"
+      },
+      "response": [
+        {
+          "name": "Validation Error",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"image\": {\n    \"orderIndex\": 0,\n    \"base64\": \"not-a-valid-base64\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/caption",
+              "host": ["{{base_url}}"],
+              "path": ["api", "caption"]
+            }
+          },
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"error\": \"VALIDATION_ERROR\",\n  \"message\": \"orderIndex must be positive integer\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Error - Story Too Many Images",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"images\": [\n    {\"orderIndex\": 1, \"base64\": \"{{base64_image_1}}\"},\n    {\"orderIndex\": 2, \"base64\": \"{{base64_image_2}}\"},\n    {\"orderIndex\": 3, \"base64\": \"{{base64_image_3}}\"},\n    {\"orderIndex\": 4, \"base64\": \"{{base64_image_4}}\"},\n    {\"orderIndex\": 5, \"base64\": \"{{base64_image_5}}\"},\n    {\"orderIndex\": 6, \"base64\": \"{{base64_image_6}}\"},\n    {\"orderIndex\": 7, \"base64\": \"{{base64_image_7}}\"},\n    {\"orderIndex\": 8, \"base64\": \"{{base64_image_8}}\"},\n    {\"orderIndex\": 9, \"base64\": \"{{base64_image_9}}\"},\n    {\"orderIndex\": 10, \"base64\": \"{{base64_image_10}}\"},\n    {\"orderIndex\": 11, \"base64\": \"{{base64_image_11}}\"},\n    {\"orderIndex\": 12, \"base64\": \"{{base64_image_12}}\"},\n    {\"orderIndex\": 13, \"base64\": \"{{base64_image_13}}\"},\n    {\"orderIndex\": 14, \"base64\": \"{{base64_image_14}}\"},\n    {\"orderIndex\": 15, \"base64\": \"{{base64_image_15}}\"},\n    {\"orderIndex\": 16, \"base64\": \"{{base64_image_16}}\"}\n  ],\n  \"contexts\": [],\n  \"globalAnswers\": {}\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/atlas",
+          "host": ["{{base_url}}"],
+          "path": ["api", "atlas"]
+        },
+        "description": "Test maximum limit enforcement (16 images exceeds max of 15)"
+      },
+      "response": [
+        {
+          "name": "Too Many Images",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"images\": [...16 images...],\n  \"contexts\": [],\n  \"globalAnswers\": {}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/atlas",
+              "host": ["{{base_url}}"],
+              "path": ["api", "atlas"]
+            }
+          },
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"error\": \"VALIDATION_ERROR\",\n  \"message\": \"Maximum 15 images allowed\"\n}"
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "base64_image_1",
+      "value": "data:image/jpeg;base64,<PASTE_BASE64_HERE>",
+      "type": "string"
+    },
+    {
+      "key": "base64_image_2",
+      "value": "data:image/jpeg;base64,<PASTE_BASE64_HERE>",
+      "type": "string"
+    },
+    {
+      "key": "base64_image_3",
+      "value": "data:image/jpeg;base64,<PASTE_BASE64_HERE>",
+      "type": "string"
+    },
+    {
+      "key": "base64_image_4",
+      "value": "data:image/jpeg;base64,<PASTE_BASE64_HERE>",
+      "type": "string"
+    },
+    {
+      "key": "base64_image_5",
+      "value": "data:image/jpeg;base64,<PASTE_BASE64_HERE>",
+      "type": "string"
+    },
+    {
+      "key": "base64_image_6",
+      "value": "data:image/jpeg;base64,<PASTE_BASE64_HERE>",
+      "type": "string"
+    },
+    {
+      "key": "base64_image_7",
+      "value": "data:image/jpeg;base64,<PASTE_BASE64_HERE>",
+      "type": "string"
+    },
+    {
+      "key": "base64_image_8",
+      "value": "data:image/jpeg;base64,<PASTE_BASE64_HERE>",
+      "type": "string"
+    },
+    {
+      "key": "base64_image_9",
+      "value": "data:image/jpeg;base64,<PASTE_BASE64_HERE>",
+      "type": "string"
+    },
+    {
+      "key": "base64_image_10",
+      "value": "data:image/jpeg;base64,<PASTE_BASE64_HERE>",
+      "type": "string"
+    },
+    {
+      "key": "base64_image_11",
+      "value": "data:image/jpeg;base64,<PASTE_BASE64_HERE>",
+      "type": "string"
+    },
+    {
+      "key": "base64_image_12",
+      "value": "data:image/jpeg;base64,<PASTE_BASE64_HERE>",
+      "type": "string"
+    },
+    {
+      "key": "base64_image_13",
+      "value": "data:image/jpeg;base64,<PASTE_BASE64_HERE>",
+      "type": "string"
+    },
+    {
+      "key": "base64_image_14",
+      "value": "data:image/jpeg;base64,<PASTE_BASE64_HERE>",
+      "type": "string"
+    },
+    {
+      "key": "base64_image_15",
+      "value": "data:image/jpeg;base64,<PASTE_BASE64_HERE>",
+      "type": "string"
+    },
+    {
+      "key": "base64_image_16",
+      "value": "data:image/jpeg;base64,<PASTE_BASE64_HERE>",
+      "type": "string"
+    }
+  ]
+}

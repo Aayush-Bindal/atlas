@@ -1,4 +1,4 @@
-import { parse } from 'exifr';
+import { parse } from "exifr";
 
 export interface ImageMetadata {
   takenAt?: string; // ISO 8601 timestamp
@@ -16,7 +16,13 @@ export async function extractMetadata(file: File): Promise<ImageMetadata> {
   try {
     // Extract EXIF data using exifr
     const exif = await parse(file, {
-      pick: ['DateTimeOriginal', 'GPSLatitude', 'GPSLongitude', 'Make', 'Model']
+      pick: [
+        "DateTimeOriginal",
+        "GPSLatitude",
+        "GPSLongitude",
+        "Make",
+        "Model",
+      ],
     });
 
     if (!exif) {
@@ -46,16 +52,16 @@ export async function extractMetadata(file: File): Promise<ImageMetadata> {
 
     // Extract device information
     if (exif.Make || exif.Model) {
-      const make = exif.Make ? exif.Make.trim() : '';
-      const model = exif.Model ? exif.Model.trim() : '';
-      metadata.device = [make, model].filter(Boolean).join(' ').trim();
+      const make = exif.Make ? exif.Make.trim() : "";
+      const model = exif.Model ? exif.Model.trim() : "";
+      metadata.device = [make, model].filter(Boolean).join(" ").trim();
     }
 
     return metadata;
   } catch (error) {
     // If EXIF extraction fails, return empty metadata
     // This ensures the app continues to work with images that don't have EXIF data
-    console.warn('Failed to extract EXIF metadata:', error);
+    console.warn("Failed to extract EXIF metadata:", error);
     return {};
   }
 }

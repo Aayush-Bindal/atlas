@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 // Basic validation schemas - simplified for MVP
 
@@ -73,7 +73,7 @@ export const ImageUploadSchema = z.object({
 
 export const ValidatedCaptionSchema = z.object({
   orderIndex: z.number().int().positive(),
-  text: z.string().min(1).max(2000, 'Caption too long'),
+  text: z.string().min(1).max(2000, "Caption too long"),
 });
 
 export const GlobalAnswersSchema = z.object({}).catchall(z.string());
