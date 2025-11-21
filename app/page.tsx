@@ -341,20 +341,17 @@ const Navigation: React.FC = () => (
       <span className="font-bold text-xl tracking-tighter">ATLAS</span>
     </div>
     <div className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400 pointer-events-auto">
-      <a href="#" className="hover:text-white transition-colors">
-        Manifesto
+      <a href="/dashboard" className="hover:text-white transition-colors">
+        Dashboard
       </a>
-      <a href="#" className="hover:text-white transition-colors">
+      <a href="explore" className="hover:text-white transition-colors">
         Explore
       </a>
-      <a href="#" className="hover:text-white transition-colors">
+      <a href="pricing" className="hover:text-white transition-colors">
         Pricing
       </a>
     </div>
     <div className="flex items-center gap-4 pointer-events-auto">
-      <button className="text-zinc-300 hover:text-white text-sm font-medium transition-colors">
-        Log in
-      </button>
       <button className="bg-white text-black px-6 py-2.5 rounded-full text-sm font-bold hover:bg-zinc-200 transition-colors">
         Start Atlas
       </button>
@@ -947,9 +944,6 @@ const Footer: React.FC = () => (
 
         <div className="text-right">
           <div className="flex justify-end gap-6 text-zinc-500 text-sm font-mono uppercase tracking-wider mb-12">
-            <a href="#" className="hover:text-white transition-colors">
-              Login
-            </a>
             <a href="#" className="hover:text-white transition-colors">
               Twitter
             </a>
