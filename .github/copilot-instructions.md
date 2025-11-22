@@ -28,6 +28,7 @@ app/api/
   atlas/route.ts       # Story generation endpoint (45s timeout, 1024MB RAM)
   caption/route.ts     # Image caption endpoint (10s timeout)
   health/route.ts      # OpenRouter latency check
+  speech-to-text/      # DEPRECATED - OpenRouter doesn't support this (use Web Speech API instead)
 lib/
   openrouter.ts        # Axios client factory with timeout/headers
   config/models.ts     # Environment-driven model selection (CAPTION_MODEL, STORY_MODEL)
@@ -37,6 +38,7 @@ lib/
     validation.ts      # Zod schemas + TypeScript interfaces
     logger.ts          # JSON console logger (use logger.info/error for all API routes)
     compress.ts        # Browser-side image compression (canvas, max 1000px)
+    speechToText.ts    # Web Speech API wrapper (browser-native, no server required)
 ```
 
 ## Development Workflows
@@ -73,6 +75,14 @@ curl -X POST http://localhost:3000/api/caption \
 curl -X POST http://localhost:3000/api/atlas \
   -H "Content-Type: application/json" \
   -d '{"images":[...],"contexts":[...],"globalAnswers":{"purpose":"Birthday","mood":"whimsical"}}'
+```
+
+### Request ID tracking
+
+All API routes generate UUIDs for request tracking. Search logs by `[requestId]`:
+
+```bash
+npm run dev 2>&1 | grep "[abc-123-def]"  # Filter specific request
 ```
 
 ## Project-Specific Conventions
@@ -154,6 +164,61 @@ export function compressFile(file: File): Promise<string> {
 
 **Why**: Keeps payloads under 50MB; Vercel bodyParser limit already configured.
 
+### 7. **Workflow orchestration: AtlasWorkflow class**
+
+Use `lib/utils/workflow.ts` for multi-step UI state management:
+
+```typescript
+const workflow = useRef(new AtlasWorkflow()).current;
+
+// Subscribe to state changes
+useEffect(() => {
+  const unsubscribe = workflow.subscribe((state) => {
+    setWorkflowState(state);
+  });
+  return unsubscribe;
+}, [workflow]);
+
+// Execute pipeline
+workflow.setGlobalAnswers({ purpose, mood });
+await workflow.generateCaptions();
+await workflow.generateStory();
+```
+
+**Why**: Centralizes processing logic, progress tracking, and error handling across the image → caption → story pipeline.
+
+### 8. **Speech-to-text integration: Web Speech API**
+
+Use `lib/utils/speechToText.ts` for voice context capture:
+
+```typescript
+const result = await speechToText({
+  language: 'en-US',
+  maxRecordingTime: 30,
+  onRecordingStart: () => { /* UI feedback */ },
+  onRecordingEnd: () => { /* UI feedback */ }
+});
+```
+
+- **Browser-native only**: Uses Web Speech API (instant, free, no API costs)
+- **OpenRouter doesn't support speech-to-text**: Previous fallback removed (OpenRouter API doesn't have `/audio/transcriptions`)
+- **Browser support check**: Use `isWebSpeechSupported()` to verify availability
+- **Context injection**: Pass `audioContext` in `CaptionRequest` to enhance image captions
+
+### 9. **Image processing pipeline**
+
+Always use `lib/utils/imagePipeline.ts` for file handling:
+
+```typescript
+const processedImages = await processImages(
+  files,
+  (completed, total) => { /* progress UI */ },
+  { maxWidth: 1200, targetSizeKB: 300 }
+);
+```
+
+Pipeline executes: EXIF extraction → compression → validation → base64 encoding.
+
 ## Integration Points
 
 ### OpenRouter API
@@ -181,6 +246,11 @@ Handles errors with `AtlasAPIError` for consistent error messaging.
 2. **Story generation bottleneck**: `/api/atlas` processes all images sequentially in one Claude request (~45s)
 3. **Memory optimization**: Compress images client-side; server processes base64 strings in memory
 4. **Vercel limits**: 1024MB RAM, 60s max duration (configured in `vercel.json`)
+5. **Compression strategies**:
+   - Progressive JPEG for gradual loading
+   - `targetSizeKB` parameter ensures predictable payload sizes
+   - Metadata extraction happens before compression to preserve EXIF
+6. **Error recovery**: Image processing falls back to basic compression if EXIF extraction fails
 
 ## Common Patterns
 
@@ -205,9 +275,58 @@ Handles errors with `AtlasAPIError` for consistent error messaging.
 2. Adjust `maxTokens`/`temperature` in `lib/config/models.ts` if needed
 3. Test latency—ensure story generation stays under 45s
 
+### Debugging LLM responses
+
+All API routes log comprehensive diagnostics:
+
+```typescript
+console.log(`[${requestId}] RAW LLM RESPONSE:`, {
+  length: raw.length,
+  firstChars: raw.substring(0, 200),
+  model: res.data.model
+});
+```
+
+Use `stripMarkdownCodeFences()` in routes to handle LLMs returning ` ```json\n{...}\n``` ` wrappers.
+
+## UI/UX Patterns (app/create/page.tsx)
+
+### Glassmorphism design system
+
+```typescript
+className="glass-panel rounded-4xl"  // Applied to main card containers
+// CSS: backdrop-filter: blur(24px), rgba(0,0,0,0.3) background
+```
+
+### State-driven UI feedback
+
+Show processing steps based on `WorkflowState`:
+
+```typescript
+if (workflowState.isProcessing) return 'Processing images...';
+if (workflowState.isGeneratingCaptions) return 'Generating captions...';
+if (workflowState.isGeneratingStory) return 'Creating your story...';
+```
+
+### Error display patterns
+
+Type-categorized errors for better UX:
+
+```typescript
+setError({
+  type: 'processing' | 'transcription' | 'api' | 'general',
+  message: 'User-friendly message'
+});
+```
+
+### Component reusability
+
+Extract reusable aesthetic components (`ImmersiveBackground`, `Navigation`) to maintain visual consistency.
+
 ## References
 
 - **Main docs**: `CLAUDE.md` (developer bible with full API contracts)
 - **Backend status**: `BACKEND_IMPLEMENTATION.md` (implementation checklist)
 - **Project README**: `README.md` (high-level architecture)
 - **Type definitions**: `lib/utils/validation.ts` (Zod schemas + TS interfaces)
+- **API postman collection**: `postman.json` (request examples)

@@ -49,7 +49,6 @@ export function useSpeechToText() {
     try {
       const result = await speechToText({
         language: 'en-US',
-        useOpenRouterFallback: true,
         maxRecordingTime: 15, // 15 seconds max
 
         // UI feedback callbacks
@@ -248,7 +247,6 @@ export async function simpleSpeechRecording(): Promise<string | null> {
   try {
     const result = await speechToText({
       language: 'en-US',
-      useOpenRouterFallback: true,
       maxRecordingTime: 10
     });
 
@@ -271,7 +269,6 @@ export async function recordMultipleContexts(imageCount: number): Promise<string
     try {
       const result = await speechToText({
         language: 'en-US',
-        useOpenRouterFallback: true,
         maxRecordingTime: 15
       });
 

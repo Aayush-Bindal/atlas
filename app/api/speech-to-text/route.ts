@@ -1,3 +1,15 @@
+/**
+ * DEPRECATED: This API route is no longer functional
+ * 
+ * OpenRouter does NOT support speech-to-text transcription.
+ * The /audio/transcriptions endpoint does not exist in their API.
+ * 
+ * Solution: Use Web Speech API directly in the browser instead.
+ * See: lib/utils/speechToText.ts for the working implementation.
+ * 
+ * This file is kept for reference but should not be used.
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/openrouter';
 

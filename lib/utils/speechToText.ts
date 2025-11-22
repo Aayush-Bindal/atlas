@@ -74,10 +74,6 @@ declare var SpeechRecognition: {
 export interface SpeechToTextOptions {
   /** Language code (e.g., 'en-US', 'es-ES', 'fr-FR') */
   language?: string;
-  /** Whether to use OpenRouter as fallback if Web Speech API fails */
-  useOpenRouterFallback?: boolean;
-  /** OpenRouter model to use for fallback */
-  openRouterModel?: string;
   /** Maximum recording time in seconds */
   maxRecordingTime?: number;
   /** Callback for recording start */
@@ -90,7 +86,7 @@ export interface SpeechToTextOptions {
 
 export interface SpeechToTextResult {
   text: string;
-  method: 'web-speech-api' | 'openrouter';
+  method: 'web-speech-api';
   confidence?: number;
   duration: number;
 }
@@ -122,15 +118,13 @@ export async function speechToText(options: SpeechToTextOptions = {}): Promise<S
 
   const {
     language = 'en-US',
-    useOpenRouterFallback = true,
-    openRouterModel = 'google/speech-to-text',
     maxRecordingTime = 30,
     onRecordingStart,
     onRecordingEnd,
     onInterimResult
   } = options;
 
-  // Try Web Speech API first (fastest)
+  // Use Web Speech API (browser native, fast, free)
   try {
     const result = await webSpeechToText({
       language,
@@ -145,32 +139,9 @@ export async function speechToText(options: SpeechToTextOptions = {}): Promise<S
       method: 'web-speech-api',
       duration: Date.now() - startTime
     };
-  } catch (error) {
-    console.warn('Web Speech API failed:', error);
-
-    if (!useOpenRouterFallback) {
-      throw error;
-    }
-  }
-
-  // Fallback to OpenRouter
-  try {
-    const result = await openRouterSpeechToText({
-      language,
-      model: openRouterModel,
-      maxRecordingTime,
-      onRecordingStart,
-      onRecordingEnd
-    });
-
-    return {
-      ...result,
-      method: 'openrouter',
-      duration: Date.now() - startTime
-    };
-  } catch (error) {
-    console.error('OpenRouter fallback also failed:', error);
-    throw new Error('Speech-to-text conversion failed. Please try again or type your context manually.');
+  } catch (error: any) {
+    console.error('Web Speech API failed:', error);
+    throw new Error(error.message || 'Speech-to-text conversion failed. Please try again or type your context manually.');
   }
 }
 
@@ -188,7 +159,8 @@ async function webSpeechToText(options: {
     // Check browser support
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      throw new Error('Speech recognition not supported in this browser');
+      reject(new Error('Speech recognition not supported in this browser. Please try typing your context manually.'));
+      return;
     }
 
     const recognition = new SpeechRecognition();
@@ -202,9 +174,11 @@ async function webSpeechToText(options: {
     let timeoutId: NodeJS.Timeout;
 
     recognition.onstart = () => {
+      console.log('Speech recognition started');
       options.onRecordingStart?.();
       // Set timeout for max recording time
       timeoutId = setTimeout(() => {
+        console.log('Max recording time reached, stopping...');
         recognition.stop();
       }, options.maxRecordingTime * 1000);
     };
@@ -216,6 +190,7 @@ async function webSpeechToText(options: {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
           finalTranscript += transcript;
+          console.log('Final transcript received:', transcript);
         } else {
           interimTranscript += transcript;
         }
@@ -230,6 +205,7 @@ async function webSpeechToText(options: {
     recognition.onend = () => {
       clearTimeout(timeoutId);
       options.onRecordingEnd?.();
+      console.log('Speech recognition ended. Final transcript:', finalTranscript);
 
       if (finalTranscript.trim()) {
         resolve({
@@ -244,6 +220,7 @@ async function webSpeechToText(options: {
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       clearTimeout(timeoutId);
       options.onRecordingEnd?.();
+      console.error('Speech recognition error:', event.error);
 
       let errorMessage = 'Speech recognition error';
       switch (event.error) {
@@ -256,8 +233,14 @@ async function webSpeechToText(options: {
         case 'not-allowed':
           errorMessage = 'Microphone access denied. Please allow microphone access.';
           break;
+        case 'network':
+          errorMessage = 'Network error. Speech recognition requires an internet connection. Please check your connection and try again.';
+          break;
+        case 'aborted':
+          errorMessage = 'Speech recognition was aborted. Please try again.';
+          break;
         default:
-          errorMessage = `Speech recognition error: ${event.error}`;
+          errorMessage = `Speech recognition error: ${event.error}. You can type your context manually instead.`;
       }
 
       reject(new Error(errorMessage));
@@ -265,99 +248,14 @@ async function webSpeechToText(options: {
 
     // Request microphone permission and start
     navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(() => recognition.start())
-      .catch(() => reject(new Error('Microphone access required for speech recognition')));
-  });
-}
-
-/**
- * OpenRouter speech-to-text fallback (higher accuracy)
- */
-async function openRouterSpeechToText(options: {
-  language: string;
-  model: string;
-  maxRecordingTime: number;
-  onRecordingStart?: () => void;
-  onRecordingEnd?: () => void;
-}): Promise<{ text: string; confidence?: number }> {
-  // Record audio for the specified time
-  const audioBlob = await recordAudioForOpenRouter(options.maxRecordingTime, options.onRecordingStart, options.onRecordingEnd);
-
-  // Send to OpenRouter
-  const formData = new FormData();
-  formData.append('file', audioBlob);
-  formData.append('model', options.model);
-  formData.append('language', options.language);
-  formData.append('response_format', 'json');
-
-  const response = await fetch('/api/speech-to-text', {
-    method: 'POST',
-    body: formData
-  });
-
-  if (!response.ok) {
-    throw new Error(`Speech-to-text API error: ${response.status}`);
-  }
-
-  const result = await response.json();
-  return {
-    text: result.text,
-    confidence: result.confidence
-  };
-}
-
-/**
- * Record audio for OpenRouter processing
- */
-function recordAudioForOpenRouter(
-  durationSeconds: number,
-  onStart?: () => void,
-  onEnd?: () => void
-): Promise<Blob> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          sampleRate: 16000,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true
-        }
+      .then(() => {
+        console.log('Microphone access granted, starting recognition...');
+        recognition.start();
+      })
+      .catch((err) => {
+        console.error('Microphone access failed:', err);
+        reject(new Error('Microphone access required for speech recognition. Please grant permission and try again.'));
       });
-
-      const recorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
-
-      const chunks: Blob[] = [];
-
-      recorder.ondataavailable = (event) => {
-        chunks.push(event.data);
-      };
-
-      recorder.onstop = () => {
-        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
-        stream.getTracks().forEach(track => track.stop());
-        onEnd?.();
-        resolve(audioBlob);
-      };
-
-      recorder.onerror = () => {
-        stream.getTracks().forEach(track => track.stop());
-        reject(new Error('Audio recording failed'));
-      };
-
-      onStart?.();
-      recorder.start();
-
-      // Stop recording after specified duration
-      setTimeout(() => {
-        recorder.stop();
-      }, durationSeconds * 1000);
-
-    } catch (error) {
-      reject(new Error('Audio recording not supported or permission denied'));
-    }
   });
 }
 
