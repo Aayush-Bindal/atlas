@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 import img1 from '@/app/assets/book/1.png';
-import img2 from '@/app/assets/book/2.png';
 import img3 from '@/app/assets/book/3.png';
 import img4 from '@/app/assets/book/4.png';
 import img5 from '@/app/assets/book/5.png';
@@ -18,11 +17,11 @@ import img9 from '@/app/assets/book/9.png';
 import img10 from '@/app/assets/book/10.png';
 import img11 from '@/app/assets/book/11.png';
 import img12 from '@/app/assets/book/12.png';
+import img13 from '@/app/assets/book/13.png';
 
 // Local images array
 const IMAGES: any[] = [
   img1,
-  img2,
   img3,
   img4,
   img5,
@@ -33,6 +32,7 @@ const IMAGES: any[] = [
   img10,
   img11,
   img12,
+  img13,
 ];
 
 type PageFlipInstance = {
