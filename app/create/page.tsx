@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -14,8 +14,15 @@ import {
   Trash2,
   Music,
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  CheckCircle
 } from 'lucide-react';
+
+// ATLAS Integration
+import { AtlasWorkflow } from '@/lib/utils/workflow';
+import { speechToText, isWebSpeechSupported } from '@/lib/utils/speechToText';
+import { processImages, ProcessedImage } from '@/lib/utils/imagePipeline';
+import { WorkflowState } from '@/lib/utils/workflow';
 
 // --- Types & Constants ---
 
@@ -104,30 +111,82 @@ const Navigation = () => {
 // --- Main Create Page Component ---
 
 export default function CreatePage() {
-  // Form State
+  // Form State (UI)
   const [memoryName, setMemoryName] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [isRecording, setIsRecording] = useState(false);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
+
+  // ATLAS Workflow Integration
+  const workflow = useRef(new AtlasWorkflow()).current;
+  const [processedImages, setProcessedImages] = useState<ProcessedImage[]>([]);
+  const [audioContext, setAudioContext] = useState<string>('');
+  const [workflowState, setWorkflowState] = useState<WorkflowState | null>(null);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<{
+    type: 'processing' | 'transcription' | 'api' | 'general';
+    message: string;
+  } | null>(null);
+  const [success, setSuccess] = useState(false);
 
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // --- File Handling Helper ---
-  const processFiles = useCallback((newFiles: File[]) => {
-    const validImages = newFiles.filter((file) => file.type.startsWith('image/'));
-
-    setFiles((prev) => {
-      if (prev.length + validImages.length > 10) {
-        alert('Maximum 10 memories allowed per drop.');
-        return prev;
-      }
-      return [...prev, ...validImages];
+  // Setup workflow subscription
+  useEffect(() => {
+    const unsubscribe = workflow.subscribe((state) => {
+      setWorkflowState(state);
     });
-  }, []);
+    return unsubscribe;
+  }, [workflow]);
+
+  // --- File Handling Helper ---
+  const processFiles = useCallback(async (newFiles: File[]) => {
+    try {
+      setError(null);
+
+      // Validate file count
+      const currentCount = processedImages.length;
+      if (currentCount + newFiles.length > 15) {
+        setError({ type: 'processing', message: 'Maximum 15 images allowed.' });
+        return;
+      }
+
+      // Filter valid images
+      const validImages = newFiles.filter((file) => file.type.startsWith('image/'));
+      if (validImages.length === 0) {
+        setError({ type: 'processing', message: 'No valid image files found.' });
+        return;
+      }
+
+      // Process images with compression and metadata extraction
+      const newProcessedImages = await processImages(
+        validImages,
+        (completed, total) => {
+          // Progress feedback could be shown in UI
+          console.log(`Processing images: ${completed}/${total}`);
+        },
+        {
+          maxWidth: 1200,
+          maxHeight: 1200,
+          targetSizeKB: 300,
+          progressive: true
+        }
+      );
+
+      setProcessedImages(prev => [...prev, ...newProcessedImages]);
+      setFiles(prev => [...prev, ...validImages]); // Keep for UI display
+
+    } catch (error) {
+      console.error('Image processing failed:', error);
+      setError({
+        type: 'processing',
+        message: error instanceof Error ? error.message : 'Failed to process images'
+      });
+    }
+  }, [processedImages]);
 
   const handleFileDrop = useCallback(
     (e: React.DragEvent) => {
@@ -147,20 +206,69 @@ export default function CreatePage() {
 
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
+    setProcessedImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // --- Audio Recorder Mock Logic ---
+  // --- Audio Recording with Real Speech-to-Text ---
 
-  const toggleRecording = () => {
+  const toggleRecording = async () => {
     if (isRecording) {
+      // Stop recording and transcribe
       setIsRecording(false);
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      intervalRef.current = null;
-      setAudioBlob(new Blob(['mock-audio-data'], { type: 'audio/mp3' }));
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+
+      if (recordingTime > 0) {
+        try {
+          setIsTranscribing(true);
+          setError(null);
+
+          // Transcribe the recorded audio
+          const result = await speechToText({
+            language: 'en-US',
+            useOpenRouterFallback: true,
+            maxRecordingTime: 30,
+
+            onRecordingStart: () => {
+              setIsRecording(true);
+              setRecordingTime(0);
+              intervalRef.current = setInterval(() => {
+                setRecordingTime(prev => prev + 1);
+              }, 1000);
+            },
+
+            onRecordingEnd: () => {
+              setIsRecording(false);
+              if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+              }
+            }
+          });
+
+          setAudioContext(result.text);
+          console.log('Audio transcribed:', result);
+
+        } catch (error) {
+          console.error('Speech-to-text failed:', error);
+          setError({
+            type: 'transcription',
+            message: error instanceof Error ? error.message : 'Failed to transcribe audio'
+          });
+        } finally {
+          setIsTranscribing(false);
+        }
+      }
+
     } else {
+      // Start recording
       setIsRecording(true);
-      setAudioBlob(null);
       setRecordingTime(0);
+      setAudioContext(''); // Clear previous transcription
+      setError(null);
+
       intervalRef.current = setInterval(() => {
         setRecordingTime((prev) => prev + 1);
       }, 1000);
@@ -168,9 +276,10 @@ export default function CreatePage() {
   };
 
   const deleteAudio = () => {
-    setAudioBlob(null);
+    setAudioContext('');
     setRecordingTime(0);
     setIsRecording(false);
+    setIsTranscribing(false);
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = null;
   };
@@ -181,23 +290,61 @@ export default function CreatePage() {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  // --- Submission ---
+  // --- Submission with Real API Integration ---
 
   const handleSubmit = async () => {
-    if (!memoryName) return alert('Please name your memory.');
-    if (files.length === 0) return alert('Please add at least one photo.');
+    if (!memoryName.trim()) {
+      setError({ type: 'general', message: 'Please name your memory.' });
+      return;
+    }
 
-    setIsSubmitting(true);
+    if (processedImages.length === 0) {
+      setError({ type: 'general', message: 'Please add at least one photo.' });
+      return;
+    }
 
-    const formData = new FormData();
-    formData.append('name', memoryName);
-    files.forEach((file, i) => formData.append(`file_${i}`, file));
-    if (audioBlob) formData.append('audio_context', audioBlob);
+    try {
+      setIsSubmitting(true);
+      setError(null);
 
-    await mockUploadService(formData);
+      // Set global context from form
+      workflow.setGlobalAnswers({
+        purpose: memoryName.trim(),
+        mood: 'memorable' // Could be made configurable in future
+      });
 
-    setIsSubmitting(false);
-    alert('Memory Drop Successful! The AI is now curating your artifact.');
+      // Execute the workflow
+      await workflow.generateCaptions();
+      await workflow.generateStory();
+
+      const finalState = workflow.getState();
+      if (finalState.story) {
+        setSuccess(true);
+        console.log('Memory created successfully:', finalState.story);
+        // In a real app, navigate to result page
+        // router.push('/memory/' + finalState.story.id);
+      } else {
+        throw new Error('Story generation failed');
+      }
+
+    } catch (error) {
+      console.error('Memory creation failed:', error);
+      setError({
+        type: 'api',
+        message: error instanceof Error ? error.message : 'Failed to create memory'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Get current processing step for UI feedback
+  const getProcessingStep = () => {
+    if (!workflowState) return '';
+    if (workflowState.isProcessing) return 'Processing images...';
+    if (workflowState.isGeneratingCaptions) return 'Generating captions...';
+    if (workflowState.isGeneratingStory) return 'Creating your story...';
+    return '';
   };
 
   return (
@@ -281,25 +428,26 @@ export default function CreatePage() {
                   </div>
                   <div className="space-y-1">
                     <p className="text-zinc-300 font-medium text-sm">Drag files here or click to upload</p>
-                    <p className="text-zinc-500 text-xs font-mono">Max 10 photos • JPG, PNG</p>
+                    <p className="text-zinc-500 text-xs font-mono">Max 15 photos • Auto-compressed • JPG, PNG</p>
                   </div>
                 </div>
               ) : (
                 <div className="w-full h-full p-4 grid grid-cols-4 gap-3">
-                  {files.map((file, i) => (
+                  {processedImages.map((processedImg, i) => (
                     <div
                       key={i}
                       className="relative aspect-square rounded-lg overflow-hidden group/img bg-black/40 border border-white/10 shadow-sm"
                     >
                       <img
-                        src={URL.createObjectURL(file)}
-                        alt="preview"
+                        src={`data:image/jpeg;base64,${processedImg.base64}`}
+                        alt="processed preview"
                         className="w-full h-full object-cover opacity-90 group-hover/img:opacity-100 transition-opacity"
                       />
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           removeFile(i);
+                          setProcessedImages(prev => prev.filter((_, idx) => idx !== i));
                         }}
                         className="absolute top-1 right-1 p-1.5 bg-black/60 backdrop-blur-md rounded-full text-white opacity-0 group-hover/img:opacity-100 transition-all hover:bg-red-500"
                       >
@@ -307,7 +455,7 @@ export default function CreatePage() {
                       </button>
                     </div>
                   ))}
-                  {files.length < 10 && (
+                  {processedImages.length < 15 && (
                     <div className="aspect-square rounded-lg border border-dashed border-white/10 flex flex-col items-center justify-center text-zinc-500 hover:text-zinc-300 hover:border-white/20 hover:bg-white/5 transition-all gap-1">
                       <span className="text-xl font-light">+</span>
                     </div>
@@ -317,28 +465,30 @@ export default function CreatePage() {
             </div>
 
             {/* 3. Audio Context */}
-            <div>
-              <div className="flex items-center justify-between mb-3 px-1">
-                <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-                  <div
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      isRecording ? 'bg-red-500 animate-pulse' : 'bg-zinc-500'
-                    }`}
-                  />
-                  Audio Context
-                </span>
-                {audioBlob && (
-                  <button
-                    onClick={deleteAudio}
-                    className="text-zinc-500 hover:text-red-400 transition-colors text-xs flex items-center gap-1 group"
-                  >
-                    <Trash2 size={12} /> <span className="group-hover:underline">Clear</span>
-                  </button>
-                )}
-              </div>
+              <div>
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                    <div
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        isRecording ? 'bg-red-500 animate-pulse' :
+                        isTranscribing ? 'bg-blue-500 animate-pulse' :
+                        audioContext ? 'bg-green-500' : 'bg-zinc-500'
+                      }`}
+                    />
+                    Audio Context
+                  </span>
+                  {(audioContext || isTranscribing) && (
+                    <button
+                      onClick={deleteAudio}
+                      className="text-zinc-500 hover:text-red-400 transition-colors text-xs flex items-center gap-1 group"
+                    >
+                      <Trash2 size={12} /> <span className="group-hover:underline">Clear</span>
+                    </button>
+                  )}
+                </div>
 
               <div className="bg-black/20 border border-white/5 rounded-xl p-1.5 overflow-hidden">
-                {!audioBlob && !isRecording ? (
+               {!audioContext && !isRecording && !isTranscribing ? (
                   <button
                     onClick={toggleRecording}
                     className="w-full py-5 flex items-center justify-center gap-3 text-zinc-400 hover:text-zinc-100 hover:bg-white/5 rounded-lg transition-all border border-transparent hover:border-white/5"
@@ -346,10 +496,10 @@ export default function CreatePage() {
                     <div className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 group-hover:text-white transition-colors">
                       <Mic size={16} />
                     </div>
-                    <span className="text-sm font-medium">Record voice note</span>
+                    <span className="text-sm font-medium">Record voice context</span>
                   </button>
                 ) : isRecording ? (
-                  <div className="w-full py-5 flex flex-col items-center justify-center gap-3 bg-black/40 rounded-lg relative overflow-hidden border border-white/10">
+                  <div className="w-full py-5 flex flex-col items-center justify-center gap-3 bg-black/40 rounded-lg border border-white/10 relative overflow-hidden">
                     <div className="absolute inset-0 flex items-center justify-center gap-1 opacity-30">
                       {WAVEFORM_BARS.map((height, i) => (
                         <div
@@ -373,30 +523,92 @@ export default function CreatePage() {
                       Stop Recording
                     </button>
                   </div>
+                ) : isTranscribing ? (
+                  <div className="w-full py-5 flex flex-col items-center justify-center gap-3 bg-black/40 rounded-lg border border-blue-500/20">
+                    <Loader2 className="animate-spin text-blue-400" size={24} />
+                    <span className="text-sm text-blue-400 font-medium">Transcribing audio...</span>
+                    <span className="text-xs text-zinc-500">This may take a few seconds</span>
+                  </div>
                 ) : (
-                  <div className="w-full py-4 flex items-center justify-between px-5 bg-black/20 rounded-lg border border-white/5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-green-900/20 border border-green-900/30 flex items-center justify-center text-green-500">
-                        <Music size={18} />
+                  <div className="w-full py-4 flex flex-col gap-3 px-5 bg-black/20 rounded-lg border border-white/5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-green-900/20 border border-green-900/30 flex items-center justify-center text-green-500">
+                          <Music size={18} />
+                        </div>
+                        <div>
+                          <p className="text-sm text-zinc-200 font-medium">Voice Context Added</p>
+                          <p className="text-xs text-zinc-500 font-mono mt-0.5">
+                            {audioContext.length} characters
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm text-zinc-200 font-medium">Audio Context Added</p>
-                        <p className="text-xs text-zinc-500 font-mono mt-0.5">
-                          {formatTime(recordingTime)} duration
-                        </p>
-                      </div>
+                      <button
+                        onClick={deleteAudio}
+                        className="p-2 hover:bg-white/10 rounded-full text-zinc-500 hover:text-white transition-colors"
+                      >
+                        <X size={16} />
+                      </button>
                     </div>
-                    <div className="h-8 w-px bg-white/10 mx-2" />
-                    <button
-                      onClick={() => setAudioBlob(null)}
-                      className="p-2 hover:bg-white/10 rounded-full text-zinc-500 hover:text-white transition-colors"
-                    >
-                      <X size={16} />
-                    </button>
+                    <div className="text-xs text-zinc-400 bg-black/20 rounded p-2 border border-white/5">
+                      <strong>Transcribed:</strong> {audioContext}
+                    </div>
                   </div>
                 )}
               </div>
             </div>
+
+            {/* Error Display */}
+            {error && (
+              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <div className="flex items-center gap-2 text-red-400 mb-1">
+                  <X size={14} />
+                  <span className="text-xs font-bold uppercase tracking-widest">
+                    {error.type.toUpperCase()} ERROR
+                  </span>
+                </div>
+                <p className="text-sm text-red-300">{error.message}</p>
+                <button
+                  onClick={() => setError(null)}
+                  className="mt-2 text-xs text-red-400 hover:text-red-300 underline"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            {/* Success Display */}
+            {success && (
+              <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <div className="flex items-center gap-2 text-green-400 mb-1">
+                  <CheckCircle size={14} />
+                  <span className="text-xs font-bold uppercase tracking-widest">
+                    MEMORY CREATED
+                  </span>
+                </div>
+                <p className="text-sm text-green-300">
+                  Your AI-generated story is ready! Check the console for details.
+                </p>
+              </div>
+            )}
+
+            {/* Processing Progress */}
+            {workflowState?.progress && workflowState.progress.totalImages > 0 && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs text-zinc-400">
+                  <span>Processing Images</span>
+                  <span>{workflowState.progress.imagesProcessed}/{workflowState.progress.totalImages}</span>
+                </div>
+                <div className="w-full bg-zinc-700 rounded-full h-1">
+                  <div
+                    className="bg-blue-500 h-1 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${(workflowState.progress.imagesProcessed / workflowState.progress.totalImages) * 100}%`
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* 4. Action Buttons */}
             <div className="flex items-center gap-3 pt-2">
@@ -405,11 +617,19 @@ export default function CreatePage() {
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isTranscribing || processedImages.length === 0}
                 className="flex-2 py-4 rounded-xl bg-white text-black text-sm font-bold hover:bg-zinc-200 hover:scale-[1.02] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 group shadow-[0_0_20px_rgba(255,255,255,0.1)]"
               >
                 {isSubmitting ? (
-                  <Loader2 className="animate-spin" size={18} />
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="animate-spin" size={18} />
+                    {getProcessingStep() || 'Creating Memory...'}
+                  </div>
+                ) : isTranscribing ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="animate-spin" size={18} />
+                    Transcribing Audio...
+                  </div>
                 ) : (
                   <>
                     Start Dropping{' '}
