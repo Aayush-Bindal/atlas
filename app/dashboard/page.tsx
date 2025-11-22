@@ -116,11 +116,90 @@ const MemoryCard = ({ memory }: { memory: any }) => {
   const router = useRouter();
 
   if (memory.status === 'generating') {
+
+
+
     return (
+
+
       <div className="bg-black/20 border border-white/5 rounded-xl overflow-hidden opacity-60">
-        {/* ...rest same... */}
+
+
+        <div className="p-6">
+
+
+          <div className="aspect-video rounded-lg overflow-hidden mb-4 bg-black/40 relative">
+
+
+            <div className="absolute inset-0 flex items-center justify-center">
+
+
+              <Loader2 className="animate-spin text-zinc-500" size={48} />
+
+
+            </div>
+
+
+          </div>
+
+
+          <h3 className="font-serif italic text-xl text-zinc-400 mb-2">{memory.title}</h3>
+
+
+          <div className="text-zinc-600 text-sm mb-4">{memory.previewText}</div>
+
+
+
+
+
+          {/* Progress Bar */}
+
+
+          <div className="space-y-2">
+
+
+            <div className="flex justify-between text-xs text-zinc-500">
+
+
+              <span>Generating Atlas...</span>
+
+
+              <span>{memory.progress}%</span>
+
+
+            </div>
+
+
+            <div className="w-full bg-zinc-700 rounded-full h-1">
+
+
+              <div
+
+
+                className="bg-blue-500 h-1 rounded-full"
+
+
+                style={{ width: `${memory.progress}%` }}
+
+
+              />
+
+
+            </div>
+
+
+          </div>
+
+
+        </div>
+
+
       </div>
+
+
     );
+
+
   }
 
   return (

@@ -344,12 +344,12 @@ const Navigation: React.FC = () => (
       <a href="/dashboard" className="hover:text-white transition-colors">
         Dashboard
       </a>
-      <a href="explore" className="hover:text-white transition-colors">
+      {/* <a href="explore" className="hover:text-white transition-colors">
         Explore
       </a>
       <a href="pricing" className="hover:text-white transition-colors">
         Pricing
-      </a>
+      </a> */}
     </div>
     <div className="flex items-center gap-4 pointer-events-auto">
       <button className="bg-white text-black px-6 py-2.5 rounded-full text-sm font-bold hover:bg-zinc-200 transition-colors">
