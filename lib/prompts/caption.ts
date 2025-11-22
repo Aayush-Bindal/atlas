@@ -11,10 +11,18 @@ Keep descriptions objective and focus on observable details. Avoid assumptions a
 export function buildCaptionPrompt(
   base64: string,
   metadata?: ImageMetadata,
+  audioContext?: string
 ): string {
   let context = "";
+
+  // Add audio context if provided (highest priority)
+  if (audioContext) {
+    context += `Audio context provided by user: "${audioContext}". `;
+  }
+
+  // Add device metadata
   if (metadata?.device) {
-    context = `Photo taken with ${metadata.device}. `;
+    context += `Photo taken with ${metadata.device}. `;
   }
 
   return `${context}${CAPTION_SYSTEM}\n\n<image>${base64}</image>`;

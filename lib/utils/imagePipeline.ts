@@ -1,5 +1,5 @@
 import { extractMetadata, ImageMetadata } from "./extractMetadata";
-import { compressFile } from "./compress";
+import { compressFile, CompressionOptions } from "./compress";
 
 export interface ProcessedImage {
   orderIndex: number;
@@ -15,13 +15,14 @@ export interface ProcessedImage {
 export async function processImage(
   file: File,
   orderIndex: number,
+  compressionOptions?: CompressionOptions,
 ): Promise<ProcessedImage> {
   try {
     // Extract metadata first (before compression to preserve EXIF)
     const metadata = await extractMetadata(file);
 
-    // Compress image
-    const base64 = await compressFile(file);
+    // Compress image with enhanced options
+    const base64 = await compressFile(file, compressionOptions);
 
     return {
       orderIndex,
@@ -31,9 +32,15 @@ export async function processImage(
     };
   } catch (error) {
     console.warn(`Failed to process image ${orderIndex}:`, error);
-    // Fallback: compress without metadata
+    // Fallback: compress without metadata using basic settings
     try {
-      const base64 = await compressFile(file);
+      const base64 = await compressFile(file, {
+        maxWidth: 1000,
+        maxHeight: 1000,
+        quality: 0.8,
+        format: 'jpeg',
+        targetSizeKB: 500
+      });
       return {
         orderIndex,
         base64,
@@ -53,12 +60,13 @@ export async function processImage(
 export async function processImages(
   files: File[],
   onProgress?: (completed: number, total: number) => void,
+  compressionOptions?: CompressionOptions,
 ): Promise<ProcessedImage[]> {
   const total = files.length;
   let completed = 0;
 
   const promises = files.map(async (file, index) => {
-    const result = await processImage(file, index + 1);
+    const result = await processImage(file, index + 1, compressionOptions);
     completed++;
     onProgress?.(completed, total);
     return result;

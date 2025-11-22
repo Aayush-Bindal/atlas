@@ -4,6 +4,7 @@ import {
   ProcessedImage,
   validateProcessedImages,
 } from "./imagePipeline";
+import { CompressionOptions } from "./compress";
 import {
   ImageUpload,
   ValidatedCaption,
@@ -41,6 +42,13 @@ export type WorkflowStep =
  * Manages the entire process from file upload to story generation
  */
 export class AtlasWorkflow {
+  private compressionOptions: CompressionOptions = {
+    maxWidth: 1200,
+    maxHeight: 1200,
+    targetSizeKB: 300,
+    progressive: true
+  };
+
   private state: WorkflowState = {
     images: [],
     captions: [],
@@ -51,8 +59,8 @@ export class AtlasWorkflow {
     progress: {
       imagesProcessed: 0,
       totalImages: 0,
-      captionsGenerated: 0,
-    },
+      captionsGenerated: 0
+    }
   };
 
   private listeners: ((state: WorkflowState) => void)[] = [];
@@ -86,6 +94,15 @@ export class AtlasWorkflow {
     return "idle";
   }
 
+  // Configuration methods
+  setCompressionOptions(options: Partial<CompressionOptions>): void {
+    this.compressionOptions = { ...this.compressionOptions, ...options };
+  }
+
+  getCompressionOptions(): CompressionOptions {
+    return { ...this.compressionOptions };
+  }
+
   // Step 1: Process uploaded files
   async processFiles(files: File[]): Promise<void> {
     if (files.length === 0) {
@@ -103,10 +120,14 @@ export class AtlasWorkflow {
     this.notifyListeners();
 
     try {
-      this.state.images = await processImages(files, (completed) => {
-        this.state.progress.imagesProcessed = completed;
-        this.notifyListeners();
-      });
+      this.state.images = await processImages(
+        files,
+        (completed) => {
+          this.state.progress.imagesProcessed = completed;
+          this.notifyListeners();
+        },
+        this.compressionOptions
+      );
 
       // Validate processed images
       const validation = validateProcessedImages(this.state.images);

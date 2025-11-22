@@ -28,6 +28,7 @@ export interface GlobalAnswers {
 
 export interface CaptionRequest {
   image: ImageUpload;
+  audioContext?: string; // Optional transcribed audio text for enhanced captioning
 }
 
 export interface CaptionResponse {
@@ -80,6 +81,7 @@ export const GlobalAnswersSchema = z.object({}).catchall(z.string());
 
 export const CaptionRequestSchema = z.object({
   image: ImageUploadSchema,
+  audioContext: z.string().max(1000).optional(), // Max 1000 chars for transcribed audio
 });
 
 export const StoryRequestSchema = z.object({

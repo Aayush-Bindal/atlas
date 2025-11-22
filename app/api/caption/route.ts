@@ -18,11 +18,13 @@ export async function POST(req: NextRequest) {
     });
 
     const body: CaptionRequest = await req.json();
-    const { image } = body;
+    const { image, audioContext } = body;
 
     console.log(`[${requestId}] CAPTION REQUEST BODY:`, {
       orderIndex: image.orderIndex,
       hasMetadata: !!image.metadata,
+      hasAudioContext: !!audioContext,
+      audioContextLength: audioContext?.length || 0,
       base64Length: image.base64.length,
       metadata: image.metadata
         ? {
@@ -35,7 +37,7 @@ export async function POST(req: NextRequest) {
         : null,
     });
 
-    const prompt = buildCaptionPrompt(image.base64, image.metadata);
+    const prompt = buildCaptionPrompt(image.base64, image.metadata, audioContext);
     console.log(`[${requestId}] CAPTION PROMPT BUILT:`, {
       promptLength: prompt.length,
       model: CAPTION_MODEL.name,
