@@ -59,8 +59,8 @@ const Book = React.forwardRef<PageFlipInstance, BookProps>(({ images }, ref) => 
     // but these props are valid at runtime.
     // @ts-expect-error: react-pageflip typing mismatch
     <HTMLFlipBook
-      width={370}
-      height={500}
+      width={600}
+      height={720}
       maxShadowOpacity={0.5}
       drawShadow
       showCover
@@ -199,7 +199,7 @@ export default function App() {
       </nav>
 
       {/* --- MAIN CONTENT STAGE --- */}
-      <main className="flex-1 flex items-center justify-center z-30 pt-12 overflow-hidden">
+      <main className="flex-1 flex items-center justify-center z-30 pt-6 overflow-hidden">
         <div className="relative flex items-center justify-center px-3">
           <Book images={IMAGES} ref={bookRef} />
         </div>
