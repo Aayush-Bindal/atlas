@@ -6,16 +6,33 @@ import HTMLFlipBook from 'react-pageflip';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
-// High Quality Portrait Images (Approx 2:3 Aspect Ratio)
-const IMAGES: string[] = [
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800&auto=format&fit=crop', // Cover
-  'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=800&auto=format&fit=crop', // Page 1
-  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=800&auto=format&fit=crop', // Page 2
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop', // Page 3
-  'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?q=80&w=800&auto=format&fit=crop', // Page 4
-  'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=800&auto=format&fit=crop', // Page 5
-  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800&auto=format&fit=crop', // Page 6
-  'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?q=80&w=800&auto=format&fit=crop', // Back cover
+import img1 from '@/app/assets/book/1.png';
+import img2 from '@/app/assets/book/2.png';
+import img3 from '@/app/assets/book/3.png';
+import img4 from '@/app/assets/book/4.png';
+import img5 from '@/app/assets/book/5.png';
+import img6 from '@/app/assets/book/6.png';
+import img7 from '@/app/assets/book/7.png';
+import img8 from '@/app/assets/book/8.png';
+import img9 from '@/app/assets/book/9.png';
+import img10 from '@/app/assets/book/10.png';
+import img11 from '@/app/assets/book/11.png';
+import img12 from '@/app/assets/book/12.png';
+
+// Local images array
+const IMAGES: any[] = [
+  img1,
+  img2,
+  img3,
+  img4,
+  img5,
+  img6,
+  img7,
+  img8,
+  img9,
+  img10,
+  img11,
+  img12,
 ];
 
 type PageFlipInstance = {
