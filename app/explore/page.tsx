@@ -191,11 +191,11 @@ export default function App() {
             </span>
           </div>
         </div>
-        <div className="flex-1 flex justify-end gap-4 pointer-events-auto">
+        {/* <div className="flex-1 flex justify-end gap-4 pointer-events-auto">
           <button className="p-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-colors border border-white/5 cursor-pointer">
             <Download size={18} />
           </button>
-        </div>
+        </div> */}
       </nav>
 
       {/* --- MAIN CONTENT STAGE --- */}
