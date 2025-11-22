@@ -12,7 +12,6 @@ import {
   Loader2,
   X,
   Trash2,
-  Music,
   ArrowLeft,
   ArrowRight,
   CheckCircle
@@ -21,7 +20,6 @@ import {
 // ATLAS Integration
 import { AtlasWorkflow } from '@/lib/utils/workflow';
 import { speechToText, isWebSpeechSupported } from '@/lib/utils/speechToText';
-import { processImages, ProcessedImage } from '@/lib/utils/imagePipeline';
 import { WorkflowState } from '@/lib/utils/workflow';
 
 // --- Types & Constants ---
